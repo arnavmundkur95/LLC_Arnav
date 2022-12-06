@@ -2,6 +2,8 @@ import React from 'react';
 import Dashboard from './Dashboard/Dashboard';
 import Papa from 'papaparse';
 import { Outlet, Link } from 'react-router-dom';
+import UploadStatus from './Components/UploadStatus';
+import ProceedButton from './Components/ProceedButton';
 
 const Application = () => {
   const [hasFieldData, setHasFieldData] = React.useState<boolean>(false);
@@ -40,25 +42,6 @@ const Application = () => {
     }
   };
 
-  type UploadStatusProps = {
-    name: string;
-    value: boolean;
-  };
-
-  const UploadStatus = (props: UploadStatusProps) => {
-    return (
-      <div style={styles.uploadStatusContainer}>
-        <p style={styles.uploadStatusFile}>{props.name}</p>
-        <div
-          style={{
-            ...styles.uploadStatus,
-            backgroundColor: `${props.value ? '#d4c9c1' : 'transparent'}`,
-          }}
-        />
-      </div>
-    );
-  };
-
   const FormUpload = () => {
     return (
       <div style={styles.formUploadContainer}>
@@ -81,28 +64,11 @@ const Application = () => {
           />
         </div>
 
-        <ProceedButton />
+        <ProceedButton
+          hasFieldData={hasFieldData}
+          hasSpeciesData={hasSpeciesData}
+        />
       </div>
-    );
-  };
-
-  const ProceedButton = () => {
-    return (
-      <Link to={'/dashboard'} style={styles.proceedButtonWrapper}>
-        <div
-          onClick={() => {}}
-          style={{
-            ...styles.proceedButtonContainer,
-            backgroundColor: `${
-              !hasFieldData || !hasSpeciesData ? 'grey' : '#3e4437'
-            }`,
-            border: `1px solid ${
-              !hasFieldData || !hasSpeciesData ? 'grey' : '#3e4437'
-            }`,
-          }}>
-          Proceed
-        </div>
-      </Link>
     );
   };
 
