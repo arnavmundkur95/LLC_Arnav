@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 type ProceedButtonProps = {
   hasFieldData: boolean;
@@ -7,10 +7,16 @@ type ProceedButtonProps = {
 };
 
 const ProceedButton = (props: ProceedButtonProps) => {
+  let navigate = useNavigate();
+
   return (
-    <Link to={'/dashboard'} style={styles.proceedButtonWrapper}>
+    <div style={styles.proceedButtonWrapper}>
       <div
-        onClick={() => {}}
+        onClick={() => {
+          if (props.hasFieldData && props.hasSpeciesData) {
+            navigate('/dashboard');
+          }
+        }}
         style={{
           ...styles.proceedButtonContainer,
           backgroundColor: `${
@@ -22,7 +28,7 @@ const ProceedButton = (props: ProceedButtonProps) => {
         }}>
         Proceed
       </div>
-    </Link>
+    </div>
   );
 };
 

@@ -1,13 +1,13 @@
 import React from 'react';
-import Dashboard from './Dashboard/Dashboard';
 import Papa from 'papaparse';
-import { Outlet, Link } from 'react-router-dom';
 import UploadStatus from './Components/UploadStatus';
 import ProceedButton from './Components/ProceedButton';
+import useData from '../hooks/useData';
 
 const Application = () => {
   const [hasFieldData, setHasFieldData] = React.useState<boolean>(false);
   const [hasSpeciesData, setHasSpeciesData] = React.useState<boolean>(false);
+  const { cleanFieldData, cleanSpeciesData } = useData();
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -24,17 +24,17 @@ const Application = () => {
 
           if (parsedData.data.length) {
             if (file.name.includes('field_data')) {
+              const { data, yearHigh, yearLow } = cleanFieldData(
+                parsedData.data
+              );
+              localStorage.setItem('field_data', JSON.stringify(data));
+              localStorage.setItem('year_high', JSON.stringify(yearHigh));
+              localStorage.setItem('year_low', JSON.stringify(yearLow));
               setHasFieldData(true);
-              localStorage.setItem(
-                'field_data',
-                JSON.stringify(parsedData.data)
-              );
             } else {
+              const cleanedData = cleanSpeciesData(parsedData.data);
+              localStorage.setItem('species_data', JSON.stringify(cleanedData));
               setHasSpeciesData(true);
-              localStorage.setItem(
-                'species_data',
-                JSON.stringify(parsedData.data)
-              );
             }
           }
         }
