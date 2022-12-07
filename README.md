@@ -23,10 +23,11 @@ Improvements:
 
 You can download this folder as a zip file, or clone it as I have made the repo public.
 
-On the first page, click on the "Choose files" button to select the "field_data.csv" and "species.csv" files located in the data folder of the project, and upload them. If this is successful, the proceed button will be enabled and you can continue to the dashboard.
+### Steps
 
-To get started: run the command below in a terminal after navigating to the folder you cloned the project in.
+1. (Optional) If you don't have `node.js` installed, follow a node setup guide for your operating system.
+2. Open a terminal and cd into the tree_dashboard folder within the folder you cloned the project in.
+3. Run the command `npm install` to install the dependencies.
+4. Run the command `npm start` to start a development server to run the project.
 
-### `npm start`
-
-This command will run the project on the development server (localhost:3000).
+On the first page, click on the "Choose files" button to select the `field_data.csv` and `species.csv` files located in the `./data` folder of the project, and upload them. If this is successful, the proceed button will be enabled and you can continue to the dashboard.
