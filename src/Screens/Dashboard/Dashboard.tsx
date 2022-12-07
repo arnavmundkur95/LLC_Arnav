@@ -2,9 +2,8 @@ import React from 'react';
 
 import Dropdown from 'react-dropdown';
 import { useNavigate } from 'react-router-dom';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, XAxis, YAxis } from 'recharts';
 import { FieldData, SpeciesData } from '../../types';
-import { useScrollBy } from 'react-use-window-scroll';
 
 const Dashboard = () => {
   let fieldData: FieldData[];
@@ -27,8 +26,8 @@ const Dashboard = () => {
   }
 
   let navigate = useNavigate();
-  const scrollBy = useScrollBy();
-  const getHighestTreeInYear = (year: number): FieldData[] => {
+
+  const getTallestTreeInYear = (year: number): FieldData[] => {
     const result = fieldData
       .filter((tree) => tree.year_monitored === year)
       .sort((a, b) => b.height - a.height);
@@ -40,6 +39,7 @@ const Dashboard = () => {
     return speciesData.find((s) => s.tree_species_id === id)?.latin_name;
   };
 
+  // Sort (ascending) the best growing method based on tree health for a given species
   const getBestGrowingMethod = (species: string): string => {
     const result = fieldData
       .filter(
@@ -47,15 +47,11 @@ const Dashboard = () => {
       )
       .sort((a, b) => b.health - a.health)[0]?.method;
 
-    fieldData
-      .filter(
-        (data: FieldData) => getSpeciesNameFromID(data.species_id) === species
-      )
-      .forEach((d) => console.log(d.health));
-
     return result;
   };
 
+  // Utility function to ensure that the data actually has entries
+  // for a given species
   const hasDataOnSpecies = (species: string): boolean => {
     const data = fieldData.filter(
       (s) => getSpeciesNameFromID(s.species_id) === species
@@ -64,19 +60,13 @@ const Dashboard = () => {
     return !!data.length;
   };
 
-  const getAverageHeightPerSpecies = () => {};
-
   // Navigate back to the first page if missing data
   React.useEffect(() => {
-    // if (!loading) {
     if (!fieldData) {
-      console.log('this');
       navigate('/');
     } else if (!yearLowBound) {
-      console.log('thisssss');
       navigate('/');
     }
-    // }
   }, []);
 
   const HighestTree = () => {
@@ -111,7 +101,7 @@ const Dashboard = () => {
           }}
           onClick={() => {
             if (year) {
-              const result = getHighestTreeInYear(year);
+              const result = getTallestTreeInYear(year);
               setHighestTrees(result);
             }
           }}>
