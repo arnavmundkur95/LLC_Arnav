@@ -2,7 +2,9 @@ import React from 'react';
 
 import Dropdown from 'react-dropdown';
 import { useNavigate } from 'react-router-dom';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { FieldData, SpeciesData } from '../../types';
+import { useScrollBy } from 'react-use-window-scroll';
 
 const Dashboard = () => {
   let fieldData: FieldData[];
@@ -25,7 +27,7 @@ const Dashboard = () => {
   }
 
   let navigate = useNavigate();
-
+  const scrollBy = useScrollBy();
   const getHighestTreeInYear = (year: number): FieldData[] => {
     const result = fieldData
       .filter((tree) => tree.year_monitored === year)
@@ -82,8 +84,10 @@ const Dashboard = () => {
     const [highestTrees, setHighestTrees] = React.useState<FieldData[]>();
 
     return (
-      <div>
-        <p>Curious what the tallest 5 trees in a given year are?</p>
+      <div style={styles.sectionContainer}>
+        <h4 style={{ color: 'white' }}>
+          Curious what the tallest 5 trees in a given year are?
+        </h4>
         <input
           type={'number'}
           min={yearLowBound}
@@ -99,7 +103,7 @@ const Dashboard = () => {
           disabled={year === undefined}
           style={{
             border: 'none',
-            backgroundColor: year === undefined ? 'grey' : '#404c24',
+            backgroundColor: year === undefined ? 'grey' : '#2b3b32',
             paddingTop: 5,
             paddingBottom: 5,
             color: year === undefined ? 'darkGrey' : 'white',
@@ -113,13 +117,27 @@ const Dashboard = () => {
           }}>
           Find out!
         </button>
-        {highestTrees &&
-          highestTrees.map((tree) => (
-            <div>
-              <p>{tree.species_id}</p>
-              <p>{tree.height}</p>
-            </div>
-          ))}
+        <div style={{ marginTop: 15 }}>
+          {highestTrees &&
+            highestTrees.map((tree) => (
+              <div
+                style={{
+                  border: '1px solid black',
+                  borderRadius: 5,
+                  marginBottom: 5,
+                  paddingLeft: 10,
+                  backgroundColor: '#bcb494',
+                }}>
+                <p>
+                  Species:{' '}
+                  <span style={{ fontStyle: 'italic' }}>
+                    {getSpeciesNameFromID(tree.species_id)}
+                  </span>
+                </p>
+                <p>Height: {tree.height}cm</p>
+              </div>
+            ))}
+        </div>
       </div>
     );
   };
@@ -128,16 +146,26 @@ const Dashboard = () => {
     const [species, setSpecies] = React.useState<string>('');
     const [method, setMethod] = React.useState<string>('');
     const options = speciesData
-      .filter((s) => hasDataOnSpecies(s.latin_name))
-      .map((s) => s.latin_name);
+      ? speciesData
+          .filter((s) => hasDataOnSpecies(s.latin_name))
+          .map((s) => s.latin_name)
+      : [];
 
     return (
-      <div style={{ width: '40%' }}>
-        <p>What is the best way to grow a certain species of tree?</p>
+      <div style={{ ...styles.sectionContainer, width: '40%' }}>
+        <h4 style={{ color: 'white' }}>
+          What is the best way to grow a certain species of tree?
+        </h4>
 
         {speciesData && (
           <div
-            style={{ border: '1px solid grey', borderRadius: 6, padding: 10 }}>
+            style={{
+              border: '1px solid grey',
+              borderRadius: 6,
+              padding: 10,
+              color: 'white',
+              marginBottom: 15,
+            }}>
             <Dropdown
               options={options}
               onChange={(change) => {
@@ -152,27 +180,148 @@ const Dashboard = () => {
         )}
 
         {method && (
-          <p>
-            The best method to grow{' '}
+          <p style={{ color: 'white' }}>
+            The best way to grow{' '}
             <span style={{ fontStyle: 'italic' }}>{species}</span> is using the{' '}
-            {method} method.
+            "{method}" method.
           </p>
         )}
       </div>
     );
   };
 
-  return (
-    <div style={styles.mainContainer}>
-      <h2>Welcome to the Land Life Dashboard</h2>
+  const getGrowingMethods = (): string[] => {
+    const methods: { [key: string]: boolean } = {};
+    fieldData.forEach((data) => {
+      if (data.method && !methods[data.method]) {
+        methods[data.method] = true;
+      }
+    });
+
+    return Object.keys(methods);
+  };
+
+  const getBarChartData = (method: string): BarChartData[] => {
+    const record: { [key: string]: { sum: number; count: number } } = {};
+    const data = fieldData.filter((d) => d.method === method);
+    const species: string[] = speciesData.map((s) => s.latin_name);
+    const response: BarChartData[] = [];
+
+    // Populating the record object with values for the chart data
+    species.forEach((m: string) => {
+      record[m] = { sum: 0, count: 0 };
+    });
+
+    data.forEach((dataPoint) => {
+      const speciesName = getSpeciesNameFromID(dataPoint.species_id);
+      if (speciesName && dataPoint.height) {
+        if (record[speciesName]) {
+          record[speciesName] = {
+            sum: record[speciesName].sum + dataPoint.height,
+            count: record[speciesName].count + 1,
+          };
+        }
+      }
+    });
+
+    // Extracting values to the format rechart expects
+    Object.keys(record).forEach((r) => {
+      if (record[r].count) {
+        response.push({ species: r, height: record[r].sum / record[r].count });
+      }
+    });
+
+    return response;
+  };
+
+  type BarChartData = {
+    species: string;
+    height: number;
+  };
+
+  const Histogram = () => {
+    const [method, setMethod] = React.useState<string>('');
+
+    const options = React.useMemo(() => {
+      return getGrowingMethods();
+    }, []);
+
+    const data: BarChartData[] = method ? getBarChartData(method) : [];
+
+    return (
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-evenly',
-          width: '90%',
+          ...styles.sectionContainer,
+          width: '80%',
+          marginTop: 40,
+          backgroundColor: '#bcb494',
         }}>
-        <HighestTree />
-        <GrowingMethod />
+        <h3>Explore the data</h3>
+        <p>
+          Discover how the growing method affects the average height of each
+          tree species.
+        </p>
+        {speciesData && (
+          <div
+            style={{
+              border: '1px solid grey',
+              borderRadius: 6,
+              padding: 10,
+              width: '30%',
+              marginBottom: 30,
+            }}>
+            <Dropdown
+              options={options}
+              onChange={(change) => {
+                setMethod(change.value);
+              }}
+              value={method}
+              placeholder='Select a growing method'
+            />
+          </div>
+        )}
+        {!!data.length && (
+          <BarChart
+            width={window.innerWidth - window.innerWidth * 0.3}
+            height={500}
+            data={data}
+            style={{ marginTop: 30, marginBottom: 20 }}>
+            <XAxis
+              name='Height (cm)'
+              dataKey='species'
+              style={{ color: 'black' }}
+            />
+            <YAxis
+              label={{
+                value: 'Height (cm)',
+                position: 'insideLeft',
+                angle: -90,
+                dy: -10,
+              }}
+              style={{ color: 'black' }}
+            />
+            <Bar dataKey='height' fill='#404c24' />
+          </BarChart>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div style={styles.outerContainer}>
+      <div style={styles.innerContainer}>
+        <h2>Welcome to the Land Life Dashboard</h2>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-evenly',
+            width: '90%',
+          }}>
+          <HighestTree />
+          <GrowingMethod />
+        </div>
+
+        <Histogram />
       </div>
     </div>
   );
@@ -181,12 +330,24 @@ const Dashboard = () => {
 export default Dashboard;
 
 const styles: { [key: string]: React.CSSProperties } = {
-  mainContainer: {
-    width: '100vw',
+  outerContainer: {
     height: '100vh',
+    width: '100%',
     backgroundColor: '#cbccbc',
+    overflow: 'scroll',
+  },
+  innerContainer: {
+    width: '100%',
+    height: '100%',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+  },
+  sectionContainer: {
+    backgroundColor: '#404c24',
+    padding: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
+    borderRadius: 10,
   },
 };
