@@ -26,7 +26,7 @@ You can download this folder as a zip file, or clone it as I have made the repo 
 ### Steps
 
 1. (Optional) If you don't have `node.js` installed, follow a node setup guide for your operating system.
-2. Open a terminal and cd into the tree_dashboard folder within the folder you cloned the project in.
+2. Open a terminal and cd into the folder you cloned the project in (you are in the right folder if you see the `package.json` file).
 3. Run the command `npm install` to install the dependencies.
 4. Run the command `npm start` to start a development server to run the project.
 
